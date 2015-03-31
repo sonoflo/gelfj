@@ -198,9 +198,9 @@ public class GelfHandler
         if (extractStacktrace) {
             final Throwable thrown = record.getThrown();
             if (null != thrown) {
-                final StringWriter sw = new StringWriter();
-                thrown.printStackTrace(new PrintWriter(sw));
-                message += "\n\r" + sw.toString();
+            	final StringWriter errorsSW = new StringWriter();
+		thrown.printStackTrace(new PrintWriter(errorsSW));
+		fields.put("full_stack", errorsSW.toString());
             }
         }
 
