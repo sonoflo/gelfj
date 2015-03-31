@@ -31,12 +31,6 @@ So after a little debugging, the message was successfully sent but graylog didn'
 
 How to use GELFJ as a JBoss/Wildfly module
 ------------------------------------------
-
-Drop the latest JAR into your classpath and configure Log4j to use it.
-
-Log4j appender
---------------
-
 Steps from https://developer.jboss.org/thread/222855?tstart=0
 
 1. First, add required modules to JBoss
