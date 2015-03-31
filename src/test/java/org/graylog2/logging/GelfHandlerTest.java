@@ -57,7 +57,7 @@ public class GelfHandlerTest
         myLogger.log( Level.FINE, "test stacktrace:", new RuntimeException("test") );
 
         Pattern regex = Pattern.compile("^.*java\\.lang\\.RuntimeException: test.*at org\\.graylog2\\.logging\\.GelfHandlerTest\\.handleStackTraces.*$", Pattern.MULTILINE | Pattern.DOTALL);
-        assertTrue(regex.matcher(gelfSender.getLastMessage().getFullMessage()).matches());
+        assertTrue(regex.matcher(gelfSender.getLastMessage().getAdditonalFields().get("stack_trace").toString()).matches());
     }
 
     @Test
