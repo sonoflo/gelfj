@@ -188,20 +188,21 @@ public class GelfHandler
             }
         }
 
+        if (extractStacktrace) {
+            final Throwable thrown = record.getThrown();
+            if (null != thrown) {
+            	final StringWriter errorsSW = new StringWriter();
+				thrown.printStackTrace(new PrintWriter(errorsSW));
+				fields.put("stack_trace", errorsSW.toString());
+				message = "@see stack_trace | " +message;
+            }
+        }
+
         final String shortMessage;
         if (message.length() > MAX_SHORT_MESSAGE_LENGTH) {
             shortMessage = message.substring(0, MAX_SHORT_MESSAGE_LENGTH - 1);
         } else {
             shortMessage = message;
-        }
-
-        if (extractStacktrace) {
-            final Throwable thrown = record.getThrown();
-            if (null != thrown) {
-            	final StringWriter errorsSW = new StringWriter();
-		thrown.printStackTrace(new PrintWriter(errorsSW));
-		fields.put("stack_trace", errorsSW.toString());
-            }
         }
 
         final GelfMessage gelfMessage =
