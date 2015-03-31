@@ -10,3 +10,6 @@ build/*
 *.iml
 target/**
 target/**/*
+
+.project
+.settings/*
