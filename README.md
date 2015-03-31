@@ -33,7 +33,7 @@ How to use GELFJ as a JBoss/Wildfly module
 ------------------------------------------
 Steps from https://developer.jboss.org/thread/222855?tstart=0
 
-1. First, add required modules to JBoss
+First, add required modules to JBoss
 
 - Get the jar as explained in the Downloading section
 - copy the .jar file from gelfj/target/ directory to/as {jboss/wildfly}/modules/org/graylog2/logging/main/gelfj.jar (create directories as needed)
@@ -64,7 +64,8 @@ module.xml:
         </dependencies>    
     </module>
 
-2. Open your relevant "standalone.xml" file and go to <subsystem xmlns="urn:jboss:domain:logging:x.x">
+Second, customize your standalone configuration file
+- Open your relevant "standalone.xml" file and go to \<subsystem xmlns="urn:jboss:domain:logging:x.x">
 - Add the following custom-handler right under this "subsystem":
 
 custom-handler:
@@ -82,6 +83,7 @@ custom-handler:
 - Add this handler to the list of handlers in root-logger:
 
 root-logger:
+
     <root-logger>
         <level name="INFO"/>
         <handlers>
@@ -90,9 +92,9 @@ root-logger:
         </handlers>
     </root-logger>
 
-- Restart JBoss and check startup logs. You shouldn't see any WARN or worse about Graylog/GelfHandler and logs should go directly to Graylog server.
+Third, restart JBoss and check startup logs. You shouldn't see any WARN or worse about Graylog/GelfHandler and logs should go directly to Graylog server.
 
-3. You're good to go !
+Now you're good to go !
 
 
 Options
