@@ -1,5 +1,6 @@
-GELFJ - A GELF Appender for Log4j and a GELF Handler for JDK Logging
-====================================================================
+GELFJ - JBoss/Wildfly module
+============================
+see https://github.com/t0xa/gelfj for common usage (A GELF Appender for Log4j and a GELF Handler for JDK Logging)
 
 Downloading
 -----------
@@ -17,75 +18,88 @@ Add the following dependency section to your pom.xml:
       ...
     </dependencies>
 
-What is GELFJ
--------------
-
-It's very simple GELF implementation in pure Java with the Log4j appender and JDK Logging Handler. It supports chunked messages which allows you to send large log messages (stacktraces, environment variables, additional fields, etc.) to a [Graylog2](http://www.graylog2.org/) server.
-
-Following transports are supported:
-
- * TCP
- * UDP
- * AMQP
+Or clone this repository, run a Maven packaging <code>mvn package</code> and get the jar !
 
 
-How to use GELFJ
-----------------
+What is the difference with t0xa GELFJ
+--------------------------------------
+
+I removed the stack trace from message field and add a new field named full_stack.
+When using t0xa as a JBoss/Wildfly module, I had some issues with long stack traces : the whole log didn't show up on my graylog server.
+So after a little debugging, the message was successfully sent but graylog didn't want these logs. I decided to make a separate field with the stack just to see if this would have fixed it and it worked ! I just want to share my work and help users who are stuck with this issue.
+
+
+How to use GELFJ as a JBoss/Wildfly module
+------------------------------------------
 
 Drop the latest JAR into your classpath and configure Log4j to use it.
 
 Log4j appender
 --------------
 
-GelfAppender will use the log message as a short message and a stacktrace (if exception available) as a long message if "extractStacktrace" is true.
+Steps from https://developer.jboss.org/thread/222855?tstart=0
 
-To use GELF Facility as appender in Log4j (XML configuration format):
+1. First, add required modules to JBoss
 
-    <appender name="graylog2" class="org.graylog2.log.GelfAppender">
-        <param name="graylogHost" value="192.168.0.201"/>
-        <param name="originHost" value="my.machine.example.com"/>
-        <param name="extractStacktrace" value="true"/>
-        <param name="addExtendedInformation" value="true"/>
-        <param name="facility" value="gelf-java"/>
-        <param name="Threshold" value="INFO"/>
-        <param name="additionalFields" value="{'environment': 'DEV', 'application': 'MyAPP'}"/>
-    </appender>
+- Get the jar as explained in the Downloading section
+- copy the .jar file from gelfj/target/ directory to/as {jboss/wildfly}/modules/org/graylog2/logging/main/gelfj.jar (create directories as needed)
+- create the following module.xml file in the same directory:
 
-and then add it as a one of appenders:
+module.xml:
 
-    <root>
-        <priority value="INFO"/>
-        <appender-ref ref="graylog2"/>
-    </root>
+    <module xmlns="urn:jboss:module:1.1" name="org.graylog2.logging">    
+        <resources>    
+            <resource-root path="gelfj.jar"/>    
+        </resources>    
+        <dependencies>    
+            <module name="json-simple"/>    
+        </dependencies>    
+    </module>   
 
-Or, in the log4j.properties format:
+- Download json-simple.jar from https://code.google.com/p/json-simple/downloads/list //Seeking for a github now that google code will be down soon, else I'll post the jar here later
+- Copy the jar to/as {jboss/wildfly}/modules/json-simple/main/json-simple.jar
+- Create the following module.xml file in the same directory:
 
-    # Define the graylog2 destination
-    log4j.appender.graylog2=org.graylog2.log.GelfAppender
-    log4j.appender.graylog2.graylogHost=graylog2.example.com
-    log4j.appender.graylog2.originHost=my.machine.example.com
-    log4j.appender.graylog2.facility=gelf-java
-    log4j.appender.graylog2.layout=org.apache.log4j.PatternLayout
-    log4j.appender.graylog2.extractStacktrace=true
-    log4j.appender.graylog2.addExtendedInformation=true
-    log4j.appender.graylog2.additionalFields={'environment': 'DEV', 'application': 'MyAPP'}
+module.xml:
 
-    # Send all INFO logs to graylog2
-    log4j.rootLogger=INFO, graylog2
+    <module xmlns="urn:jboss:module:1.1" name="json-simple">    
+        <resources>    
+            <resource-root path="json-simple.jar"/>    
+        </resources>    
+        <dependencies>    
+        </dependencies>    
+    </module>
 
-AMQP Configuration:
+2. Open your relevant "standalone.xml" file and go to <subsystem xmlns="urn:jboss:domain:logging:x.x">
+- Add the following custom-handler right under this "subsystem":
 
-    log4j.appender.graylog2=org.graylog2.log.GelfAppender
-    log4j.appender.graylog2.amqpURI=amqp://amqp.address.com
-    log4j.appender.graylog2.amqpExchangeName=messages
-    log4j.appender.graylog2.amqpRoutingKey=gelfudp
-    log4j.appender.graylog2.amqpMaxRetries=5
-    log4j.appender.graylog2.facility=test-application
-    log4j.appender.graylog2.layout=org.apache.log4j.PatternLayout
-    log4j.appender.graylog2.layout.ConversionPattern=%d{HH:mm:ss,SSS} %-5p [%t] [%c{1}] - %m%n
-    log4j.appender.graylog2.additionalFields={'environment': 'DEV', 'application': 'MyAPP'}
-    log4j.appender.graylog2.extractStacktrace=true
-    log4j.appender.graylog2.addExtendedInformation=true
+custom-handler:
+
+    <custom-handler name="GRAYLOG2" class="org.graylog2.logging.GelfHandler" module="org.graylog2.logging">
+        <level name="INFO"/> <!-- or what you want... --> 
+        <properties>
+            <property name="graylogHost" value="tcp:xxx.xxx.xxx.xxx"/> <!-- or udp: => add your graylog-server IP here -->
+            <property name="graylogPort" value="tcp:xxx.xxx.xxx.xxx"/> <!-- optional, default 12201 -->
+            <property name="extractStacktrace" value="true"/>
+            <property name="facility" value="What you want"/> <!-- see graylog doc to see if this is useful in your case --> 
+        </properties>
+    </custom-handler>
+
+- Add this handler to the list of handlers in root-logger:
+
+root-logger:
+    <root-logger>
+        <level name="INFO"/>
+        <handlers>
+            <!-- other handlers here -->
+            <handler name="GRAYLOG2"/>
+        </handlers>
+    </root-logger>
+
+- Restart JBoss and check startup logs. You shouldn't see any WARN or worse about Graylog/GelfHandler and logs should go directly to Graylog server.
+
+3. You're good to go !
+
 
 Options
 -------
@@ -96,32 +110,11 @@ GelfAppender supports the following options:
 - **graylogPort**: Port on which the Graylog2 server is listening; default 12201 (*optional*)
 - **originHost**: Name of the originating host; defaults to the local hostname (*optional*)
 - **extractStacktrace** (true/false): Add stacktraces to the GELF message; default false (*optional*)
-- **addExtendedInformation** (true/false): Add extended information like Log4j's NDC/MDC; default false (*optional*)
-- **includeLocation** (true/false): Include caller file name and line number. Log4j documentation warns that generating caller location information is extremely slow and should be avoided unless execution speed is not an issue; default true (*optional*)
 - **facility**: Facility which to use in the GELF message; default "gelf-java"
 - **amqpURI**: AMQP URI (*required when using AMQP integration*)
 - **amqpExchangeName**: AMQP Exchange name - should be the same as setup in graylog2-radio (*required when using AMQP integration*)
 - **amqpRoutingKey**: AMQP Routing key - should be the same as setup in graylog2-radio (*required when using AMQP integration*)
 - **amqpMaxRetries**: Retries count; default value 0 (*optional*)
-
-Logging Handler
----------------
-
-Configured via properties as a standard Handler like
-
-    handlers = org.graylog2.logging.GelfHandler
-
-    .level = ALL
-
-    org.graylog2.logging.GelfHandler.level = ALL
-    org.graylog2.logging.GelfHandler.graylogHost = syslog.example.com
-    #org.graylog2.logging.GelfHandler.graylogPort = 12201
-    #org.graylog2.logging.GelfHandler.extractStacktrace = true
-    #org.graylog2.logging.GelfHandler.additionalField.0 = foo=bah
-    #org.graylog2.logging.GelfHandler.additionalField.1 = foo2=bah2
-    #org.graylog2.logging.GelfHandler.facility = local0
-
-    .handlers=org.graylog2.logging.GelfHandler
 
 What is GELF
 ------------
