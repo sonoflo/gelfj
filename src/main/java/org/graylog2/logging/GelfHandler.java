@@ -200,7 +200,7 @@ public class GelfHandler
             if (null != thrown) {
             	final StringWriter errorsSW = new StringWriter();
 		thrown.printStackTrace(new PrintWriter(errorsSW));
-		fields.put("full_stack", errorsSW.toString());
+		fields.put("stack_trace", errorsSW.toString());
             }
         }
 
