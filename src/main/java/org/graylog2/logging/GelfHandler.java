@@ -188,6 +188,10 @@ public class GelfHandler
             }
         }
 
+        //empty stack : when a field is present, it will be present on all messages !
+        if (fields.containsKey("stack_trace"))
+        	fields.remove("stack_trace");
+        
         if (extractStacktrace) {
             final Throwable thrown = record.getThrown();
             if (null != thrown) {
