@@ -73,7 +73,7 @@ custom-handler:
     <custom-handler name="GRAYLOG2" class="org.graylog2.logging.GelfHandler" module="org.graylog2.logging">
         <level name="INFO"/> <!-- or what you want... --> 
         <properties>
-            <property name="graylogHost" value="tcp:xxx.xxx.xxx.xxx"/> <!-- or udp: => add your graylog-server IP here -->
+            <property name="graylogHost" value="tcp:xxx.xxx.xxx.xxx"/> <!-- udp: doesn't work in my case, don't know why, my firewalls seems Ok => add your graylog-server IP here -->
             <property name="graylogPort" value="tcp:xxx.xxx.xxx.xxx"/> <!-- optional, default 12201 -->
             <property name="extractStacktrace" value="true"/>
             <property name="facility" value="What you want"/> <!-- see graylog doc to see if this is useful in your case --> 
